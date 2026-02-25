@@ -11,6 +11,8 @@ const updateProfileSchema = Joi.object({
   skillsOffered: Joi.array().items(Joi.string().trim()).max(20),
   skillsWanted: Joi.array().items(Joi.string().trim()).max(20),
   profilePic: Joi.string().uri().allow(''),
+  profilePhoto: Joi.string().uri().allow(''),
+  backgroundPhoto: Joi.string().uri().allow(''),
 }).min(1).messages({
   'object.min': 'At least one field is required to update',
 });

@@ -27,6 +27,24 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+const uploadProfilePhoto = async (req, res, next) => {
+  try {
+    const user = await userService.uploadUserImage(req.user._id, req.file, 'profile');
+    res.status(200).json({ success: true, data: { user } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const uploadBackgroundPhoto = async (req, res, next) => {
+  try {
+    const user = await userService.uploadUserImage(req.user._id, req.file, 'background');
+    res.status(200).json({ success: true, data: { user } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteUser = async (req, res, next) => {
   try {
     await userService.deleteUser(req.params.id);
@@ -36,4 +54,11 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-module.exports = { getUsers, getUser, updateProfile, deleteUser };
+module.exports = {
+  getUsers,
+  getUser,
+  updateProfile,
+  uploadProfilePhoto,
+  uploadBackgroundPhoto,
+  deleteUser,
+};
