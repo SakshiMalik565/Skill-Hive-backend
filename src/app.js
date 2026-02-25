@@ -10,6 +10,8 @@ const errorHandler = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const swapRoutes = require('./routes/swapRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const assetRoutes = require('./routes/assetRoutes');
 
 const app = express();
 
@@ -33,6 +35,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/swaps', swapRoutes);
+app.use('/api/chats', chatRoutes);
+app.use('/api/assets', assetRoutes);
 
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
