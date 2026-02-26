@@ -12,6 +12,8 @@ const userRoutes = require('./routes/userRoutes');
 const swapRoutes = require('./routes/swapRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const assetRoutes = require('./routes/assetRoutes');
+const projectRoutes = require('./routes/projectRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 const app = express();
 
@@ -37,6 +39,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/swaps', swapRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.use('*', (req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });

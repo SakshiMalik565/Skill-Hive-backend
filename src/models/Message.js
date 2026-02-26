@@ -22,6 +22,18 @@ const messageSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    isEncrypted: {
+      type: Boolean,
+      default: false,
+    },
+    textIv: {
+      type: String,
+      default: '',
+    },
+    textTag: {
+      type: String,
+      default: '',
+    },
     status: {
       type: String,
       enum: ['sent', 'delivered', 'read'],
