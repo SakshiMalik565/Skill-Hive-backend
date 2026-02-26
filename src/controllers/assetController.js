@@ -9,13 +9,22 @@ const getAssets = async (req, res, next) => {
   }
 };
 
+const getMyAssets = async (req, res, next) => {
+  try {
+    const result = await assetService.getMyAssets(req.user._id, req.query);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createAsset = async (req, res, next) => {
   try {
-    const asset = await assetService.createAsset(req.user._id, req.body);
+    const asset = await assetService.createAsset(req.user._id, req.body, req.files);
     res.status(201).json({ success: true, data: { asset } });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = { getAssets, createAsset };
+module.exports = { getAssets, getMyAssets, createAsset };

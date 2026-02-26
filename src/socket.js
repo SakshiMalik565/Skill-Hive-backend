@@ -5,6 +5,7 @@ const Conversation = require('./models/Conversation');
 const Message = require('./models/Message');
 const chatService = require('./services/chatService');
 const { getOrCreateConversation } = require('./services/conversationService');
+const { encryptText, decryptText } = require('./utils/chatCrypto');
 
 const onlineUsers = new Map();
 const lastSeen = new Map();
@@ -158,11 +159,16 @@ const initializeSocket = (server) => {
           conversation = await getOrCreateConversation(userId, toUserId);
         }
 
+        const encrypted = encryptText(text.trim());
+
         const newMessage = await Message.create({
           conversation: conversation._id,
           sender: userId,
           receiver: toUserId,
-          text: text.trim(),
+          text: encrypted.cipherText,
+          textIv: encrypted.iv,
+          textTag: encrypted.tag,
+          isEncrypted: true,
           status: 'sent',
         });
 
@@ -187,6 +193,14 @@ const initializeSocket = (server) => {
         const populatedMessage = await Message.findById(newMessage._id)
           .populate('sender', 'name profilePic')
           .populate('receiver', 'name profilePic');
+
+        if (populatedMessage.isEncrypted) {
+          populatedMessage.text = decryptText(
+            populatedMessage.text,
+            populatedMessage.textIv,
+            populatedMessage.textTag
+          );
+        }
 
         io.to(`user:${toUserId}`).emit('message:new', populatedMessage);
         socket.emit('message:sent', populatedMessage);

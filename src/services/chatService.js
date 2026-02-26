@@ -2,6 +2,7 @@ const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const Swap = require('../models/Swap');
 const ApiError = require('../utils/ApiError');
+const { encryptText, decryptText } = require('../utils/chatCrypto');
 const {
   resolveRecipientId,
   getOrCreateConversation,
@@ -52,6 +53,16 @@ const getConversations = async (userId) => {
     allowedIds.add(otherId.toString());
   });
 
+  const decryptMessage = (message) => {
+    if (!message || !message.isEncrypted) return message;
+    try {
+      message.text = decryptText(message.text, message.textIv, message.textTag);
+      return message;
+    } catch (error) {
+      throw new ApiError(500, 'Failed to decrypt message');
+    }
+  };
+
   const enriched = await Promise.all(
     conversations
       .filter((conv) => {
@@ -72,7 +83,7 @@ const getConversations = async (userId) => {
         return {
           _id: conv._id,
           participant: otherParticipant,
-          lastMessage: conv.lastMessage,
+          lastMessage: decryptMessage(conv.lastMessage),
           updatedAt: conv.updatedAt,
           unreadCount,
         };
@@ -98,7 +109,11 @@ const getMessages = async (userId, conversationId) => {
     .populate('receiver', 'name profilePic')
     .sort({ createdAt: 1 });
 
-  return messages;
+  return messages.map((message) => {
+    if (!message.isEncrypted) return message;
+    message.text = decryptText(message.text, message.textIv, message.textTag);
+    return message;
+  });
 };
 
 const createConversation = async (userId, payload) => {
@@ -144,11 +159,16 @@ const createMessage = async (userId, conversationId, { text, receiverId }) => {
   );
   await ensureCanMessage(userId, otherParticipant);
 
+  const encrypted = encryptText(text.trim());
+
   const message = await Message.create({
     conversation: conversationId,
     sender: userId,
     receiver: receiverId,
-    text: text.trim(),
+    text: encrypted.cipherText,
+    textIv: encrypted.iv,
+    textTag: encrypted.tag,
+    isEncrypted: true,
     status: 'sent',
   });
 
@@ -159,6 +179,14 @@ const createMessage = async (userId, conversationId, { text, receiverId }) => {
   const populatedMessage = await Message.findById(message._id)
     .populate('sender', 'name profilePic')
     .populate('receiver', 'name profilePic');
+
+  if (populatedMessage.isEncrypted) {
+    populatedMessage.text = decryptText(
+      populatedMessage.text,
+      populatedMessage.textIv,
+      populatedMessage.textTag
+    );
+  }
 
   return populatedMessage;
 };
